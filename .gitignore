@@ -1,0 +1,81 @@
+# Data folders and files
+# Ignore unzipped accuracy assessment data (keep .zip files)
+6. Data/Accuracy assessment/
+
+# Ignore large RGB data files
+*.tif
+*.tiff
+
+# Ignore generated segmentation outputs
+**/segmentation_example/
+**/RGB_clip/
+**/RGB_mask/
+**/shp_clean/
+**/tmp_to_process/
+**/segment/
+
+# Ignore individual result files
+**/iou_result.txt
+**/iou_summary*.csv
+
+# Python cache and temporary files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Environment files
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# Operating System
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# ArcGIS files
+*.lock
+*.gdb/
+*.aprx.bak
+*.tbx.bak
+
+# Temporary files
+*.tmp
+*.temp
+*~
+
+# Log files
+*.log
