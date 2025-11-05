@@ -41,9 +41,11 @@ Our case study demonstrates the application over 22 million hectares of Canadian
 
 - Python 3.8+
 - Google Earth Engine Python API
+- Enable billing for your GEE Cloud Project (for parallel downloading only)
 - PyTorch (for running SAM)
 - GIS software (ArcGIS Pro recommended for cleaning)
 - Additional dependencies listed in `requirements.txt`
+
 
 ## Citation
 

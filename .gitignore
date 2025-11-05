@@ -1,7 +1,7 @@
 # Data folders and files
 # Ignore unzipped accuracy assessment data (keep .zip files)
 6. Data/Accuracy assessment/
-
+5_Data/
 # Ignore large RGB data files
 *.tif
 *.tiff

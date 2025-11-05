@@ -281,6 +281,11 @@ def init_scratch_gdb(prefer_dir=None):
 # HELPERS
 # -----------------------------
 def _extract_key_from_shp(stem: str) -> str:
+    # Try pattern: Boundary_rgb_{PROV}_{KEY}_intersect (e.g., Boundary_rgb_SK_10_1_intersect)
+    m = re.match(r"^Boundary_rgb_[A-Za-z]{2}_(.+?)_intersect$", stem, re.IGNORECASE)
+    if m:
+        return m.group(1)
+    # Try pattern: Boundary_{PROV}_{KEY}_{NUM}_intersect
     m = re.match(r"^Boundary_[A-Za-z]{2}_(.+?)_\d+_intersect$", stem, re.IGNORECASE)
     if m:
         return m.group(1)
@@ -288,17 +293,24 @@ def _extract_key_from_shp(stem: str) -> str:
     return parts[2] if len(parts) >= 3 else stem
 
 def _find_rasters_for_key(key: str) -> List[str]:
-    pat1 = os.path.join(RASTER_FOLDER, f"Mask_{key}_*.tif")
+    # Try pattern: crop_mask_{key}.tif (e.g., crop_mask_10_1.tif)
+    pat1 = os.path.join(RASTER_FOLDER, f"crop_mask_{key}.tif")
     hits = glob.glob(pat1, recursive=RECURSIVE)
     if hits:
         return hits
-    pat2 = os.path.join(RASTER_FOLDER, f"*{key}*.tif")
+    # Try pattern: Mask_{key}_*.tif
+    pat2 = os.path.join(RASTER_FOLDER, f"Mask_{key}_*.tif")
     hits = glob.glob(pat2, recursive=RECURSIVE)
     if hits:
         return hits
+    # Try pattern: *{key}*.tif (broad search)
+    pat3 = os.path.join(RASTER_FOLDER, f"*{key}*.tif")
+    hits = glob.glob(pat3, recursive=RECURSIVE)
+    if hits:
+        return hits
     if len(key) > 3:
-        pat3 = os.path.join(RASTER_FOLDER, f"*{key[1:]}*.tif")
-        hits = glob.glob(pat3, recursive=RECURSIVE)
+        pat4 = os.path.join(RASTER_FOLDER, f"*{key[1:]}*.tif")
+        hits = glob.glob(pat4, recursive=RECURSIVE)
     return hits or []
 
 def _pick_best_raster(paths: List[str]) -> str:
@@ -440,19 +452,24 @@ def main():
         stem = os.path.splitext(os.path.basename(shp))[0]
 
         # --- raster selection ---
-        if RASTER_FOLDER:   # use one fixed raster for all polygons
-            if not arcpy.Exists(RASTER_FOLDER):
-                print(f"❌ Raster path not found: {RASTER_FOLDER}")
-                return
-            raster_path = RASTER_FOLDER
-        else:             # fall back to per-key search
-            key = _extract_key_from_shp(stem)
-            rasters = _find_rasters_for_key(key)
-            if not rasters:
-                print(f"❌ No raster found for key '{key}' (from {stem})")
-                missing += 1
-                continue
-            raster_path = _pick_best_raster(rasters)
+        if RASTER_FOLDER:
+            # Check if RASTER_FOLDER is a file (single raster mode) or folder (per-key search mode)
+            if os.path.isfile(RASTER_FOLDER) or (arcpy.Exists(RASTER_FOLDER) and not os.path.isdir(RASTER_FOLDER)):
+                # Single raster file for all polygons
+                raster_path = RASTER_FOLDER
+            else:
+                # Folder - search for matching rasters per key
+                key = _extract_key_from_shp(stem)
+                rasters = _find_rasters_for_key(key)
+                if not rasters:
+                    print(f"❌ No raster found for key '{key}' (from {stem})")
+                    missing += 1
+                    continue
+                raster_path = _pick_best_raster(rasters)
+        else:
+            # RASTER_FOLDER not set - try per-key search (requires RASTER_FOLDER to be set)
+            print(f"❌ RASTER_FOLDER must be set to a folder or file path")
+            return
 
         # --- process ---
         try:

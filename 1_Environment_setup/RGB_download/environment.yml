@@ -1,20 +1,21 @@
 name: rgb-environment
 channels:
-  - defaults
   - conda-forge
+  - defaults
 dependencies:
   - python=3.10
-  - numpy
-  - requests
-  - pillow
-  - tqdm
-  - ipykernel
-  - geemap
   - pip
   - pip:
+      - numpy
+      - requests
+      - pillow
+      - tqdm
+      - ipykernel
       - opencv-python
       - imageio
       - earthengine-api
+      - geemap
       - rasterio
+      - pyproj
       - geopandas
       - geedim

@@ -23,6 +23,10 @@
 - **Missing package**: Ensure environment is activated and run `conda list` to check installed packages
 - **Permission errors**: Ensure Anaconda is installed in user folder or run with admin permission
 - **Environment creation fails**: Check internet connection and try again
+- **PROJ/GDAL errors or import failures**: If you encounter persistent errors with rasterio, geedim, 
+or PROJ database version mismatches (especially if ArcGIS Pro is installed), try installing a fresh 
+standalone Miniconda in a separate location (e.g., `C:\Users\<YourName>\Miniconda3`) and create the 
+environment using that installation. Avoid mixing conda and pip for geospatial packages.
 
 
 ## Additional Notes

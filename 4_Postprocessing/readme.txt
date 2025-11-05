@@ -1,76 +1,117 @@
 # Postprocessing Workflow
 
 ## Description
-- Part 4 performs comprehensive cleaning and refinement of the raw segmentation results from Part 3
-- Includes cleaning with masks, boundary processing, and filtering operations
-- Uses `4a_arcpy_clean_shp.ipynb` for all postprocessing tasks
+Part 4 performs comprehensive cleaning and refinement of the raw segmentation results from Part 3:
+- **4a: Boundary Cleaning** - Cleans and intersects segmentation boundaries across multiple years
+- **4b: Crop Mask Application** - Applies crop mask statistics to filter and refine field boundaries
 
 ## Prerequisites
 - Complete environment setup following instructions in `1_Environment_setup/ArcGIS_SAM/readme.txt`
 - Ensure you have the cloned environment activated
+- **Complete Part 1 - Folder Setup:**
+  - Run `1_Environment_setup/Folder_Structure/folder_setup.ipynb` to create required folder structure
 - **Complete Part 2 workflow:**
-  1. RGB Images: Ensure `segmentation_example/RGB_clip/` contains raw RGB (tif) files from GEE download (`1a_rgb_download.ipynb`), sample data, or your own RGB images
-  2. Create Masks: Run `2_RGB_download/1b_rgb_mean_mask.ipynb` on the RGB images to generate processed images and masks
+  - Run `2_RGB_download/1a_rgb_download.ipynb` to download RGB images
+  - Run `2_RGB_download/1b_mask_download.ipynb` to download crop masks
 - **Complete Part 3 workflow:**
-  1. Segmentation: Run `3a_arcpy_rgb_segmentation.ipynb`
+  - Run `3_Segmentation/3a_arcpy_rgb_segmentation_new.ipynb` to generate segmentation boundaries
 
 ## Usage Steps
+
+### Step 1: Boundary Cleaning (4a)
 1. Open ArcGIS Pro Python Command Prompt
 2. Activate your cloned environment: `conda activate field-boundary-seg`
 3. Set working directory: `cd C:\Your\Project\Path\4_Postprocessing`
 4. Launch Jupyter: `jupyter lab` or use VS Code with the correct environment
-5. **Create required folders manually:**
-   - Create `segmentation_example/shp_clean/` folder
-   - Create `segmentation_example/tmp_to_process/` folder
-6. Edit `4a_arcpy_clean_shp.ipynb`:
-   - Update `input_folder` to point to segmentation results (`segmentation_example/RGB_mask/segment/`)
-   - Update `mask_folder` to point to mask shapefiles (`segmentation_example/RGB_mask/shp/`)
-   - Update `output_folder` and `temp_base` paths as needed
-   - Run the notebook (performs all cleaning, filtering, and boundary processing)
+5. Edit `4a_arcpy_clean_shp_new.ipynb`:
+   - **Select province**: Set `provName = 'SK'` (options: 'AB' for Alberta, 'SK' for Saskatchewan, 'MB' for Manitoba)
+   - The notebook automatically:
+     - Reads segmentation results from `5_Data/Segmentation/{Province}/`
+     - Groups boundaries by base name (removes year suffixes)
+     - Performs intersection across multiple years
+     - Applies negative buffer and overlap removal
+     - Saves cleaned boundaries to `5_Data/Postprocessing/{Province}/`
+   - Adjust parameters if needed (MIN_AREA_HA, NEG_BUFFER, etc.)
+   - Run the notebook
+
+### Step 2: Crop Mask Application (4b)
+1. Continue in the same Jupyter session or reopen as above
+2. Edit `4b_cropmask_new.ipynb`:
+   - **Select province**: Set `provName = 'SK'` (must match province from 4a)
+   - The notebook automatically:
+     - Reads cleaned boundaries from `5_Data/Postprocessing/{Province}/`
+     - Matches each boundary with corresponding crop mask from `5_Data/Mask_download/{Province}/`
+     - Calculates zonal statistics (mean crop probability per field)
+     - Filters fields by minimum area (default 2.0 ha) and crop probability (default 0.4)
+     - Saves final results to `5_Data/Final_Output/{Province}/`
+   - Adjust filter parameters if needed (MIN_HA_DEFAULT, MIN_MEAN_DEFAULT)
+   - Run the notebook
 
 ### File Structure
-This workflow uses the complete structure from Parts 2-3 and creates additional folders:
+This workflow uses automatic folder structure organized by province:
 ```
-segmentation_example/
-├── RGB_clip/                           # From Part 2: Raw RGB images
-│   └── example_RGB_download.tif
-├── RGB_mask/                           # Main processing folder
-│   ├── rgb/                           # From Part 2: Processed RGB images
-│   │   └── example_RGB_processed.tif
-│   ├── shp/                           # From Part 2: Input mask shapefiles
-│   │   └── example_mask.shp
-│   └── segment/                       # From Part 3: Raw segmentation output
-│       ├── example_boundary.shp
-│       └── shp_clean/                 # Step 6: Final cleaned results (created by 4a)
-│           └── example_boundary_final.shp
-├── shp_clean/                         # Step 5: Create manually - Intermediate cleaned results
-│   └── example_boundary_clean.shp
-└── tmp_to_process/                    # Step 5: Create manually - Temporary processing files
-    └── boundary_temp_folders/
+5_Data/
+├── Segmentation/
+│   └── Saskatchewan/                           # Input from Part 3
+│       ├── Boundary_rgb_SK_2021_50_1.shp
+│       ├── Boundary_rgb_SK_2022_50_1.shp
+│       └── ...
+├── Mask_download/
+│   └── Saskatchewan/                           # Input from Part 2
+│       ├── crop_mask_50_1.tif
+│       ├── crop_mask_51_1.tif
+│       └── ...
+├── Postprocessing/
+│   └── Saskatchewan/                           # Output from 4a
+│       ├── Boundary_rgb_SK_50_1_intersect.shp  # Grouped & cleaned boundaries
+│       ├── Boundary_rgb_SK_51_1_intersect.shp
+│       └── ...
+└── Final_Output/
+    └── Saskatchewan/                           # Output from 4b
+        ├── Boundary_rgb_SK_50_1_intersect_cropland.shp  # Final filtered fields
+        ├── Boundary_rgb_SK_51_1_intersect_cropland.shp
+        └── ...
 ```
+
+**Notes:**
+- Province selection (`provName`) must be consistent across both notebooks
+- All folders are created automatically by `folder_setup.ipynb` from Part 1
+- 4a groups boundaries by base name, removing year suffixes (e.g., `_2021`, `_2022`)
+- 4b matches boundaries with masks using tile keys extracted from filenames
+- Crop mask matching: `Boundary_rgb_SK_50_1_intersect.shp` → `crop_mask_50_1.tif`
 
 ## Troubleshooting
-- **Missing mask files**: If you get "file not found" errors in `4a_arcpy_clean_shp.ipynb`, ensure you've run `2_RGB_download/1b_rgb_mean_mask.ipynb` first
-- **Missing shapefiles**: Ensure you've run `3a_arcpy_rgb_segmentation.ipynb` first to create the required boundary files
-- **Path errors**: Verify the `input_folder`, `mask_folder`, and `output_folder` paths match your actual data locations
-- **Missing folders**: Ensure you've created `shp_clean/` and `tmp_to_process/` folders as specified in step 5
-- **Environment issues**: If imports fail, verify the environment was cloned correctly and deep learning frameworks were installed before cloning
+
+### General Issues
+- **Environment issues**: If imports fail, verify the environment was cloned correctly and ArcGIS Pro Python is activated
 - **File locks**: Ensure ArcGIS Pro is closed when running scripts to avoid file lock conflicts
+- **Memory issues**: Processing large provinces may require 16GB+ RAM. Consider processing smaller regions or tiles
 
-## Additional Notes
+### 4a Issues (Boundary Cleaning)
+- **Missing shapefiles**: Ensure you've run `3a_arcpy_rgb_segmentation_new.ipynb` first to create boundary files
+- **No files to process**: Verify the correct province is selected and segmentation outputs exist
+- **Grouping issues**: The script groups files by removing year patterns (_2021, _2022, etc.). Ensure your files follow the naming convention
+- **Scratch GDB errors**: The script creates temporary geodatabases. Ensure you have write permissions in the project folder
 
+### 4b Issues (Crop Mask Application)
+- **Missing mask files**: Ensure you've run `2_RGB_download/1b_mask_download.ipynb` first to download crop masks
+- **Raster not found**: Verify crop mask .tif files exist in `5_Data/Mask_download/{Province}/`
+- **Matching errors**: The script extracts tile keys from filenames (e.g., "50_1" from "Boundary_rgb_SK_50_1_intersect.shp"). Ensure your files follow this naming convention
+- **Spatial Analyst license**: This notebook requires ArcGIS Spatial Analyst extension. Verify it's available with `arcpy.CheckOutExtension("Spatial")`
 
-### Usage Notes
-- **4a processes**: Raw segmentation output from `RGB_mask/segment/` using masks from `RGB_mask/shp/`
-- Update all folder paths in the notebook to match your data location
-- The notebook processes all `Boundary_*.shp` files in the input folder
-- Creates intermediate output in the `shp_clean/` folder
-- **Final cleaned files**: Located in `RGB_mask/segment/shp_clean/` with `_final.shp` suffix
-- Temporary processing files are stored in `tmp_to_process/`
+### Parameter Tuning
+- **4a Parameters** (in `shp_clean_func_new.py`):
+  - `MIN_AREA_HA = 0.1`: Minimum area (hectares) to keep during cleaning. Increase to filter smaller polygons
+  - `NEG_BUFFER = "-0.2 Meters"`: Negative buffer to remove slivers. Increase magnitude for more aggressive cleaning
+  - `POS_BUFFER = "0.4 Meters"`: Positive buffer to restore edges. Should be ~2× negative buffer
+  
+- **4b Parameters** (in notebook):
+  - `MIN_MEAN_DEFAULT = 0.4`: Minimum crop probability (0-1). Fields below this are filtered out
+  - `MIN_HA_DEFAULT = 2.0`: Minimum field area (hectares) in final output. Increase to remove small fields
 
+## Additional Technical Notes
 
-
-#################### shp_clean ####################
+#################### shp_clean_func_new.py - Boundary Cleaning Functions ####################
 # Purpose:
 #   Batch-clean boundary shapefiles by intersecting same-area layers (e.g., by year),
 #   thinning by area, counting overlaps, and buffering to remove slivers—then write
