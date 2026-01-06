@@ -11,6 +11,9 @@ Our case study demonstrates the application over 22 million hectares of Canadian
 
 ![image](https://github.com/user-attachments/assets/f7fcb1d7-ea2e-46d3-8147-3a69981da2e2)
 
+<img width="900" height="456" alt="image" src="https://github.com/user-attachments/assets/a9e95dfa-c4a6-4f03-a5c3-e40d16a94463" />
+
+
 ## Features
 
 - Seasonal satellite image collection and preprocessing using **Google Earth Engine** via Python API.
