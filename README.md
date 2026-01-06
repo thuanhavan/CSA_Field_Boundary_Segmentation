@@ -12,10 +12,11 @@ Our case study demonstrates the application over 22 million hectares of Canadian
 ![image](https://github.com/user-attachments/assets/f7fcb1d7-ea2e-46d3-8147-3a69981da2e2)
 
 <img width="900" height="456" alt="image" src="https://github.com/user-attachments/assets/a9e95dfa-c4a6-4f03-a5c3-e40d16a94463" />
+
 Field boundary and high-res based map
 
 <img width="1252" height="431" alt="image" src="https://github.com/user-attachments/assets/dd037fa5-4816-434c-bc1d-176e2165cecb" />
-Crop mask and field boundary
+Crop mask (left) and field boundary
 
 
 ## Features
